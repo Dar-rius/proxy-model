@@ -1,14 +1,17 @@
 pragma solidity ^0.8.25;
 
 contract Proxy {
-    address logic;
+    //Error
+    error failVerifyContract(address target);
+    
+    address target;
 
     fallback() external payable{
-        _delegateLogic(logic);
+        _delegateLogic(target);
     }
 
-    function _implementation(address _logic) external{
-        logic = _logic;
+    function _implementation(address _target) external{
+        target = _verifyTarget(_target);
     }
 
     function _delegateLogic(address implementation) internal {
@@ -27,5 +30,13 @@ contract Proxy {
                 revert(0, returndatasize())
             }
         }
+    }
+
+    function _verifyTarget(address target) internal view returns(address){
+        require(target != address(0));
+        if (target.code.length == 0){
+            revert failVerifyContract(target);
+        }
+        return target;
     }
 }
